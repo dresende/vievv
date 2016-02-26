@@ -125,6 +125,13 @@ function parse(data, options) {
 		start = data.indexOf(start_tag, offset);
 		if (start == -1) break;
 
+		if ((Buffer.isBuffer(data) && String.fromCharCode(data[start + start_tag.length]) == start_tag.substr(-1))
+		|| (data[start + start_tag.length] == start_tag.substr(-1))) {
+			blocks.push(data.slice(offset, start + start_tag.length));
+			offset = start + start_tag.length + 1;
+			continue;
+		}
+
 		end = data.indexOf(end_tag, start + start_tag.length);
 		if (end == -1) throw new Error("End tag no found");
 
