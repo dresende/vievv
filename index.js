@@ -211,5 +211,8 @@ function escapeString(js) {
 		.replace(/\\/g, "\\\\")
 		.replace(/\"/g, "\\\"")
 		.replace(/\n/g, "\\n")
-		.replace(/\t/g, "\\t");
+		.replace(/\r/g, "\\r")
+		.replace(/\t/g, "\\t")
+		.replace(/\\b/g, "\\b")
+		.replace(/\f/g, "\\f");
 }
