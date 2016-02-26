@@ -1,6 +1,7 @@
-var fs      = require("fs");
-var path    = require("path");
-var cache   = {};
+var fs           = require("fs");
+var path         = require("path");
+var fileCache    = {};
+var compileCache = {};
 
 exports.filters = require("./filters");
 
@@ -39,32 +40,36 @@ exports.compile = function (filename, options) {
 	options          = options || {};
 	options.filename = filename;
 
-	return (function () {
-		var buf = [];
-		var fn;
+	if (!options.cache || !compileCache.hasOwnProperty(filename)) {
+		compileCache[filename] = (function () {
+			var buf = [];
+			var fn;
 
-		buf.push("var __buf=[];");
-		buf.push("with(this){");
+			buf.push("var __buf=[];");
+			buf.push("with(this){");
 
-		parse(readFile(filename, options.cache), options).map((block) => {
-			if (typeof block.run == "function") {
-				return buf.push(block.run());
-			}
+			parse(readFile(filename, options.cache), options).map((block) => {
+				if (typeof block.run == "function") {
+					return buf.push(block.run());
+				}
 
-			return buf.push("__buf.push(\"" + escapeString(block.toString()) + "\");");
-		});
-
-		buf.push("}return __buf.join(\"\")");
-
-		fn = new Function("__compiler", buf.join(""));
-
-		return function (scope) {
-			return fn.call(scope, {
-				filters : exports.filters,
-				escape  : exports.escape,
+				return buf.push("__buf.push(\"" + escapeString(block.toString()) + "\");");
 			});
-		};
-	})();
+
+			buf.push("}return __buf.join(\"\")");
+
+			fn = new Function("__compiler", buf.join(""));
+
+			return function (scope) {
+				return fn.call(scope, {
+					filters : exports.filters,
+					escape  : exports.escape,
+				});
+			};
+		})();
+	}
+
+	return compileCache[filename];
 };
 
 exports.render  = function (data, options) {
@@ -200,11 +205,11 @@ function Scope(data, resolver, options) {
 };
 
 function readFile(filename, do_cache) {
-	if (!do_cache || !cache.hasOwnProperty(filename)) {
-		cache[filename] = fs.readFileSync(filename);
+	if (!do_cache || !fileCache.hasOwnProperty(filename)) {
+		fileCache[filename] = fs.readFileSync(filename);
 	}
 
-	return cache[filename];
+	return fileCache[filename];
 }
 
 function escapeString(js) {
