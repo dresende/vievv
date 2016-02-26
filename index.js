@@ -176,7 +176,7 @@ function Scope(data, resolver, options) {
 				var buf      = [];
 				var fn;
 
-				buf.push("buf.push((function (compiler) {var buf=[];");
+				buf.push("buf.push(((compiler) => {var buf=[];");
 				buf.push("var self = " + (m[3] && m[3].length ? m[3] : "{}") + ";");
 
 				options.filename = filename;
