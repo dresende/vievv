@@ -49,8 +49,8 @@ exports.compile = function (filename, options) {
 			buf.push("with(this){");
 
 			parse(readFile(filename, options.cache), options).map((block) => {
-				if (typeof block.run == "function") {
-					return buf.push(block.run());
+				if (typeof block.compile == "function") {
+					return buf.push(block.compile());
 				}
 
 				return buf.push("__buf.push(\"" + escapeString(block.toString()) + "\");");
@@ -83,8 +83,8 @@ exports.render  = function (data, options) {
 		buf.push("with(this){");
 
 		parse(data, options).map((block) => {
-			if (typeof block.run == "function") {
-				return buf.push(block.run());
+			if (typeof block.compile == "function") {
+				return buf.push(block.compile());
 			}
 
 			return buf.push("__buf.push(\"" + escapeString(block.toString()) + "\");");
@@ -153,7 +153,7 @@ function parse(data, options) {
 
 function Scope(data, resolver, options) {
 	return {
-		run: () => {
+		compile: () => {
 			data = ("" + data).trim();
 
 			switch (data[0]) {
@@ -194,8 +194,8 @@ function Scope(data, resolver, options) {
 				options.filename = filename;
 
 				parse(readFile(filename, options.cache), options).map((block) => {
-					if (typeof block.run == "function") {
-						return buf.push(block.run());
+					if (typeof block.compile == "function") {
+						return buf.push(block.compile());
 					}
 
 					return buf.push("__buf.push(\"" + escapeString(block.toString()) + "\");");
