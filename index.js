@@ -173,7 +173,7 @@ function Scope(data, resolver, options) {
 						}) + ");";
 					}
 					return "__buf.push(" + data.substr(1).trim() + ");";
-				case ":": // filter
+				case "#": // disabled, no output
 					return "";
 			}
 
