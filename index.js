@@ -42,23 +42,7 @@ exports.compile = function (filename, options) {
 
 	if (!options.cache || !compileCache.hasOwnProperty(filename)) {
 		compileCache[filename] = (function () {
-			var buf = [];
-			var fn;
-
-			buf.push("var __buf=[];");
-			buf.push("with(this){");
-
-			parse(readFile(filename, options.cache), options).map((block) => {
-				if (typeof block.compile == "function") {
-					return buf.push(block.compile());
-				}
-
-				return buf.push("__buf.push(\"" + escapeString(block.toString()) + "\");");
-			});
-
-			buf.push("}return __buf.join(\"\")");
-
-			fn = new Function("__compiler", buf.join(""));
+			var fn = build(parse(readFile(filename, options.cache), options));
 
 			return function (scope) {
 				return fn.call(scope, {
@@ -76,23 +60,7 @@ exports.render  = function (data, options) {
 	options = options || {};
 
 	return (function () {
-		var buf = [];
-		var fn;
-
-		buf.push("var __buf=[];");
-		buf.push("with(this){");
-
-		parse(data, options).map((block) => {
-			if (typeof block.compile == "function") {
-				return buf.push(block.compile());
-			}
-
-			return buf.push("__buf.push(\"" + escapeString(block.toString()) + "\");");
-		});
-
-		buf.push("}return __buf.join(\"\")");
-
-		fn = new Function("__compiler", buf.join(""));
+		var fn = build(parse(data, options));
 
 		return function (scope) {
 			return fn.call(scope, {
@@ -111,6 +79,25 @@ exports.escape = function (html) {
 		.replace(/'/g, '&#39;')
 		.replace(/"/g, '&quot;');
 };
+
+function build(blocks) {
+	var buf = [];
+
+	buf.push("var __buf=[];");
+	buf.push("with(this){");
+
+	blocks.map((block) => {
+		if (typeof block.compile == "function") {
+			return buf.push(block.compile());
+		}
+
+		return buf.push("__buf.push(\"" + escapeString(block.toString()) + "\");");
+	});
+
+	buf.push("}return __buf.join(\"\")");
+
+	return new Function("__compiler", buf.join(""));
+}
 
 function parse(data, options) {
 	var resolver  = (options.resolver || exports.resolver)(options.filename);
