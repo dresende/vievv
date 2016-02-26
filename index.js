@@ -43,7 +43,7 @@ exports.compile = function (filename, options) {
 		var buf = [];
 		var fn;
 
-		buf.push("var buf=[];");
+		buf.push("var __buf=[];");
 		buf.push("with(this){");
 
 		parse(readFile(filename, options.cache), options).map((block) => {
@@ -51,12 +51,12 @@ exports.compile = function (filename, options) {
 				return buf.push(block.run());
 			}
 
-			return buf.push("buf.push(\"" + escapeString(block.toString()) + "\");");
+			return buf.push("__buf.push(\"" + escapeString(block.toString()) + "\");");
 		});
 
-		buf.push("}return buf.join(\"\")");
+		buf.push("}return __buf.join(\"\")");
 
-		fn = new Function("compiler", buf.join(""));
+		fn = new Function("__compiler", buf.join(""));
 
 		return function (scope) {
 			return fn.call(scope, {
@@ -74,7 +74,7 @@ exports.render  = function (data, options) {
 		var buf = [];
 		var fn;
 
-		buf.push("var buf=[];");
+		buf.push("var __buf=[];");
 		buf.push("with(this){");
 
 		parse(data, options).map((block) => {
@@ -82,12 +82,12 @@ exports.render  = function (data, options) {
 				return buf.push(block.run());
 			}
 
-			return buf.push("buf.push(\"" + escapeString(block.toString()) + "\");");
+			return buf.push("__buf.push(\"" + escapeString(block.toString()) + "\");");
 		});
 
-		buf.push("}return buf.join(\"\")");
+		buf.push("}return __buf.join(\"\")");
 
-		fn = new Function("compiler", buf.join(""));
+		fn = new Function("__compiler", buf.join(""));
 
 		return function (scope) {
 			return fn.call(scope, {
@@ -148,19 +148,19 @@ function Scope(data, resolver, options) {
 				case "=": // escape data (html)
 					if (data[1] == ":") {
 						// filter
-						return "buf.push(compiler.escape(" + data.substr(2).trim().split(" | ").reduce((js, filter) => {
-							return "compiler.filters." + filter.trim() + "(" + js + ")";
+						return "__buf.push(__compiler.escape(" + data.substr(2).trim().split(" | ").reduce((js, filter) => {
+							return "__compiler.filters." + filter.trim() + "(" + js + ")";
 						}) + "));";
 					}
-					return "buf.push(compiler.escape(" + data.substr(1).trim() + "));";
+					return "__buf.push(__compiler.escape(" + data.substr(1).trim() + "));";
 				case "-": // raw data
 					if (data[1] == ":") {
 						// filter
-						return "buf.push(" + data.substr(2).trim().split(" | ").reduce((js, filter) => {
-							return "compiler.filters." + filter.trim() + "(" + js + ")";
+						return "__buf.push(" + data.substr(2).trim().split(" | ").reduce((js, filter) => {
+							return "__compiler.filters." + filter.trim() + "(" + js + ")";
 						}) + ");";
 					}
-					return "buf.push(" + data.substr(1).trim() + ");";
+					return "__buf.push(" + data.substr(1).trim() + ");";
 				case ":": // filter
 					return "";
 			}
@@ -176,8 +176,8 @@ function Scope(data, resolver, options) {
 				var buf      = [];
 				var fn;
 
-				buf.push("buf.push(((compiler) => {var buf=[];");
-				buf.push("var self = " + (m[3] && m[3].length ? m[3] : "{}") + ";");
+				buf.push("__buf.push(((__compiler) => {");
+				buf.push("var __buf=[],self = " + (m[3] && m[3].length ? m[3] : "{}") + ";");
 
 				options.filename = filename;
 
@@ -186,10 +186,10 @@ function Scope(data, resolver, options) {
 						return buf.push(block.run());
 					}
 
-					return buf.push("buf.push(\"" + escapeString(block.toString()) + "\");");
+					return buf.push("__buf.push(\"" + escapeString(block.toString()) + "\");");
 				});
 
-				buf.push("return buf.join(\"\")})(compiler));");
+				buf.push("return __buf.join(\"\")})(__compiler));");
 
 				return buf.join("");
 			}
