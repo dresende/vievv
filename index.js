@@ -27,7 +27,7 @@ exports.renderFile = function (filename, options, next) {
 	var str;
 
 	try {
-		var template = exports.compile(filename);
+		var template = exports.compile(filename, options);
 	} catch (err) {
 		return next(err);
 	}
@@ -200,7 +200,7 @@ function Scope(data, resolver, options) {
 };
 
 function readFile(filename, do_cache) {
-	if (do_cache || !cache.hasOwnProperty(filename)) {
+	if (!do_cache || !cache.hasOwnProperty(filename)) {
 		cache[filename] = fs.readFileSync(filename);
 	}
 
