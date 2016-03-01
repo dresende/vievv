@@ -24,6 +24,7 @@ exports.renderFile = function (filename, options, next) {
 	}
 
 	options.filename = filename;
+	options.debug    = !options.cache;
 
 	var str;
 
@@ -38,17 +39,17 @@ exports.renderFile = function (filename, options, next) {
 
 exports.compile = function (filename, options) {
 	options          = options || {};
-	options.filename = filename;
+	options.filename = path.resolve(filename);
 
 	if (!options.cache || !compileCache.hasOwnProperty(filename)) {
 		compileCache[filename] = (function () {
-			var fn = build(parse(readFile(filename, options.cache), options));
+			var fn = build(parse(readFile(filename, options.cache), options), options);
 
 			return function (scope) {
 				return fn.call(scope, {
 					filters : exports.filters,
 					escape  : exports.escape,
-				});
+				}, __rethrow);
 			};
 		})();
 	}
@@ -60,13 +61,13 @@ exports.render  = function (data, options) {
 	options = options || {};
 
 	return (function () {
-		var fn = build(parse(data, options));
+		var fn = build(parse(data, options), options);
 
 		return function (scope) {
 			return fn.call(scope, {
 				filters : exports.filters,
 				escape  : exports.escape,
-			});
+			}, __rethrow);
 		};
 	})()(options);
 };
@@ -80,11 +81,18 @@ exports.escape = function (html) {
 		.replace(/"/g, '&quot;');
 };
 
-function build(blocks) {
+exports.printError = function (text) {
+	return "<pre><code>" + text + "</code></pre>";
+};
+
+function build(blocks, options) {
 	var buf = [];
 
 	buf.push("var __buf=[];");
 	buf.push("with(this){");
+	if (options.debug) {
+		buf.push("var __stack={};try{");
+	}
 
 	blocks.map((block) => {
 		if (typeof block.compile == "function") {
@@ -94,9 +102,12 @@ function build(blocks) {
 		return buf.push("__buf.push(\"" + escapeString(block.toString()) + "\");");
 	});
 
+	if (options.debug) {
+		buf.push("}catch(e){return __rethrow(e, __stack)}");
+	}
 	buf.push("}return __buf.join(\"\")");
 
-	return new Function("__compiler", buf.join(""));
+	return new Function("__compiler, __rethrow", buf.join(""));
 }
 
 function parse(data, options) {
@@ -106,7 +117,13 @@ function parse(data, options) {
 	var offset    = 0;
 	var start     = 0;
 	var end       = 0;
+	var file      = options.filename;
+	var line      = 1;
 	var blocks    = [];
+
+	if (options.debug) {
+		blocks.push(new Stack({ file: file }));
+	}
 
 	while (offset < data.length) {
 		start = data.indexOf(start_tag, offset);
@@ -119,6 +136,10 @@ function parse(data, options) {
 			continue;
 		}
 
+		if (options.debug) {
+			line += (("" + data.slice(offset, start)).match(/\n/g) || []).length;
+		}
+
 		end = data.indexOf(end_tag, start + start_tag.length);
 		if (end == -1) throw new Error("End tag no found");
 
@@ -126,7 +147,14 @@ function parse(data, options) {
 			blocks.push(data.slice(offset, start));
 		}
 
-		blocks.push(new Scope(data.slice(start + start_tag.length, end), resolver, options));
+		var scope = new Scope(data.slice(start + start_tag.length, end), resolver, options);
+		if (options.debug) {
+			blocks.push(new Stack({ line: line }));
+		}
+		blocks.push(scope);
+		if (options.debug && scope.include()) {
+			blocks.push(new Stack({ file: file }));
+		}
 
 		offset = end + end_tag.length;
 	}
@@ -138,8 +166,30 @@ function parse(data, options) {
 	return blocks;
 }
 
+function Stack(data) {
+	return {
+		compile: () => {
+			var buf = [];
+			for (var k in data) {
+				switch (typeof data[k]) {
+					case "number":
+						buf.push("__stack." + k + "=" + data[k] + ";");
+						break;
+					case "string":
+						buf.push("__stack." + k + "=\"" + escapeString(data[k]) + "\";");
+						break;
+				}
+			}
+			return buf.join("");
+		}
+	};
+}
+
 function Scope(data, resolver, options) {
 	return {
+		include: () => {
+			return (("" + data).trim().substr(0, 8) == "include ");
+		},
 		compile: () => {
 			data = ("" + data).trim();
 
@@ -215,4 +265,41 @@ function escapeString(js) {
 		.replace(/\t/g, "\\t")
 		.replace(/\\b/g, "\\b")
 		.replace(/\f/g, "\\f");
+}
+
+function __rethrow(e, d) {
+	for (var k in d) {
+		e[k] = d[k];
+	}
+
+	if (e.file && e.line) {
+		var data   = ("" + fs.readFileSync(d.file));
+		var offset = 2;
+		var from   = d.line - offset - 1;
+		var to     = d.line + offset;
+
+		if (from < 1) {
+			from = 1;
+		}
+
+		var output = d.file + ": " + ("" + e) + "\n" +
+		             data.split(/\n/).slice(from - 1, to).map((line, i) => {
+		                 return (from + i == d.line ? ">>> " : "    ") +
+		                        padN(from + i, ("" + d.line).length + 1) + ". | " +
+		                        line;
+		             }).join("\n");
+
+		process.stderr.write(output + "\n");
+
+		return exports.printError(output);;
+	}
+
+	throw e;
+}
+
+function padN(v, n) {
+	v = "" + v;
+	if (v.length >= n) return v;
+
+	return (new Array(n - v.length + 1)).join(" ") + v;
 }

@@ -1,3 +1,7 @@
+## 0.3.0 - 1 Mar 2016
+
+- adds pseudo debug stack trace (debug option)
+
 ## 0.2.0 - 26 Feb 2016
 
 - fixes caching option
