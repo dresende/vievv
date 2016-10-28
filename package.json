@@ -1,13 +1,13 @@
 {
 	"name"        : "vievv",
-	"version"     : "0.3.0",
-	"description" : "Node v4 template based on ejs",
+	"version"     : "1.0.0",
+	"description" : "Node v6 template based on ejs",
 	"license"     : "MIT",
 	"keywords"    : [ "template" ],
 	"author"      : "Diogo Resende <dresende@thinkdigital.pt>",
 	"repository"  : "http://github.com/dresende/vievv.git",
 	"main"        : "index.js",
 	"engines"     : {
-		"node" : "*"
+		"node" : ">=6.0.0"
 	}
 }
