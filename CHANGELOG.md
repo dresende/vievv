@@ -1,3 +1,7 @@
+## 1.0.0 - 27 Oct 2016
+
+- optimizes filters code, forces node v6
+
 ## 0.3.0 - 1 Mar 2016
 
 - adds pseudo debug stack trace (debug option)
