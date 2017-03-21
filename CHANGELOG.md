@@ -1,3 +1,7 @@
+## 1.0.2 - 21 Mar 2017
+
+- fixes previous commit introducing an unused dependency
+
 ## 1.0.1 - 21 Mar 2017
 
 - adds support for empty:// special file (can be returned by resolver)
