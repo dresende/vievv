@@ -1,3 +1,7 @@
+## 1.0.1 - 21 Mar 2017
+
+- adds support for empty:// special file (can be returned by resolver)
+
 ## 1.0.0 - 27 Oct 2016
 
 - optimizes filters code, forces node v6
