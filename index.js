@@ -1,4 +1,3 @@
-var htmlparser   = require("htmlparser2");
 var fs           = require("fs");
 var path         = require("path");
 var fileCache    = {};
