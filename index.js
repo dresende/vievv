@@ -1,3 +1,4 @@
+var htmlparser   = require("htmlparser2");
 var fs           = require("fs");
 var path         = require("path");
 var fileCache    = {};
@@ -26,15 +27,13 @@ exports.renderFile = function (filename, options, next) {
 	options.filename = filename;
 	options.debug    = !options.cache;
 
-	var str;
-
 	try {
 		var template = exports.compile(filename, options);
+
+		return next(null, template(options));
 	} catch (err) {
 		return next(err);
 	}
-
-	return next(null, template(options));
 };
 
 exports.compile = function (filename, options) {
@@ -141,7 +140,7 @@ function parse(data, options) {
 		}
 
 		end = data.indexOf(end_tag, start + start_tag.length);
-		if (end == -1) throw new Error("End tag no found");
+		if (end == -1) throw new Error("End tag not found");
 
 		if (start > offset) {
 			blocks.push(data.slice(offset, start));
@@ -221,9 +220,8 @@ function Scope(data, resolver, options) {
 
 				if (!m) return "throw new Error(\"Unknown include '" + escapeString(data) + "'\")";
 
-				var filename = resolver(m[1]);
+				var filename = resolver(m[1], options);
 				var buf      = [];
-				var fn;
 
 				buf.push("__buf.push(((__compiler) => {");
 				buf.push("var __buf=[],self = " + (m[3] && m[3].length ? m[3] : "{}") + ";");
@@ -249,6 +247,9 @@ function Scope(data, resolver, options) {
 };
 
 function readFile(filename, do_cache) {
+	if (filename == "empty://") {
+		return "";
+	}
 	if (!do_cache || !fileCache.hasOwnProperty(filename)) {
 		fileCache[filename] = fs.readFileSync(filename);
 	}
