@@ -103,6 +103,7 @@ function build(blocks, options) {
 	if (options.debug) {
 		buf.push("}catch(e){return __rethrow(e, __stack)}");
 	}
+
 	buf.push("}return __buf.join(\"\")");
 
 	return new Function("__compiler, __rethrow", buf.join(""));
