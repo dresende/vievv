@@ -7,6 +7,8 @@ exports.filters = require("./filters");
 
 exports.resolver = function (base_filename) {
 	return function (include_filename) {
+		if (!include_filename) return;
+
 		var dst = path.resolve(path.dirname(base_filename), include_filename);
 
 		if (path.basename(dst).indexOf(".") == -1) {
@@ -53,6 +55,21 @@ exports.compile = function (filename, options) {
 	}
 
 	return compileCache[filename];
+};
+
+exports.compileData = function (data, options) {
+	options = options || {};
+
+	return (function () {
+		var fn = build(parse(data, options), options);
+
+		return function (scope) {
+			return fn.call(scope, {
+				filters : exports.filters,
+				escape  : exports.escape,
+			}, __rethrow);
+		};
+	})();
 };
 
 exports.render  = function (data, options) {
