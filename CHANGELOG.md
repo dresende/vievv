@@ -1,3 +1,7 @@
+## 1.0.3 - 08 Nov 2021
+
+- adds compileData
+
 ## 1.0.2 - 21 Mar 2017
 
 - fixes previous commit introducing an unused dependency
