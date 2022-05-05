@@ -1,3 +1,7 @@
+## 1.0.4 - 05 May 2022
+
+- updates Scope to avoid throwing when resolver() returns null
+
 ## 1.0.3 - 08 Nov 2021
 
 - adds compileData

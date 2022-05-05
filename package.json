@@ -1,6 +1,6 @@
 {
 	"name"        : "vievv",
-	"version"     : "1.0.3",
+	"version"     : "1.0.4",
 	"description" : "Node v6 template based on ejs",
 	"license"     : "MIT",
 	"keywords"    : [ "template" ],
