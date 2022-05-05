@@ -1,3 +1,7 @@
+## 1.0.5 - 05 May 2022
+
+- fixes previous change to show only view relative path and not full content
+
 ## 1.0.4 - 05 May 2022
 
 - updates Scope to avoid throwing when resolver() returns null
