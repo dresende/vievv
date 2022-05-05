@@ -240,6 +240,8 @@ function Scope(data, resolver, options) {
 				var filename = resolver(m[1], options);
 				var buf      = [];
 
+				if (!filename) return "throw new Error(\"Unfound include '" + escapeString(data) + "'\")";
+
 				buf.push("__buf.push(((__compiler) => {");
 				buf.push("var __buf=[],self = " + (m[3] && m[3].length ? m[3] : "{}") + ";");
 
