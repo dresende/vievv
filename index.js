@@ -128,8 +128,8 @@ function build(blocks, options) {
 
 function parse(data, options) {
 	var resolver  = (options.resolver || exports.resolver)(options.filename);
-	var start_tag = options.start || "<%";
-	var end_tag   = options.end || "%>";
+	var start_tag = (typeof options.start == "string" && options.start.length ? options.start : "<%");
+	var end_tag   = (typeof options.end == "string" && options.end.length ? options.end : "%>");
 	var offset    = 0;
 	var start     = 0;
 	var end       = 0;
