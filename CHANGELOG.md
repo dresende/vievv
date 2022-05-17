@@ -1,3 +1,7 @@
+## 1.0.6 - 17 May 2022
+
+- fixes using options.start/end when not strings
+
 ## 1.0.5 - 05 May 2022
 
 - fixes previous change to show only view relative path and not full content
