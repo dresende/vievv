@@ -46,10 +46,14 @@ exports.compile = function (filename, options) {
 			var fn = build(parse(readFile(filename, options.cache), options), options);
 
 			return function (scope) {
-				return fn.call(scope, {
-					filters : exports.filters,
-					escape  : exports.escape,
-				}, __rethrow);
+				try {
+					return fn.call(scope, {
+						filters : exports.filters,
+						escape  : exports.escape,
+					}, __rethrow);
+				} catch (e) {
+					return "" + e;
+				}
 			};
 		})();
 	}
@@ -64,10 +68,14 @@ exports.compileData = function (data, options) {
 		var fn = build(parse(data, options), options);
 
 		return function (scope) {
-			return fn.call(scope, {
-				filters : exports.filters,
-				escape  : exports.escape,
-			}, __rethrow);
+			try {
+				return fn.call(scope, {
+					filters : exports.filters,
+					escape  : exports.escape,
+				}, __rethrow);
+			} catch (e) {
+				return "" + e;
+			}
 		};
 	})();
 };
@@ -79,10 +87,14 @@ exports.render  = function (data, options) {
 		var fn = build(parse(data, options), options);
 
 		return function (scope) {
-			return fn.call(scope, {
-				filters : exports.filters,
-				escape  : exports.escape,
-			}, __rethrow);
+			try {
+				return fn.call(scope, {
+					filters : exports.filters,
+					escape  : exports.escape,
+				}, __rethrow);
+			} catch (e) {
+				return "" + e;
+			}
 		};
 	})()(options);
 };
@@ -123,7 +135,11 @@ function build(blocks, options) {
 
 	buf.push("}return __buf.join(\"\")");
 
-	return new Function("__compiler, __rethrow", buf.join(""));
+	try {
+		return new Function("__compiler, __rethrow", buf.join(""));
+	} catch (e) {
+		return "" + e;
+	}
 }
 
 function parse(data, options) {
@@ -186,6 +202,7 @@ function Stack(data) {
 	return {
 		compile: () => {
 			var buf = [];
+
 			for (var k in data) {
 				switch (typeof data[k]) {
 					case "number":
@@ -196,6 +213,7 @@ function Stack(data) {
 						break;
 				}
 			}
+
 			return buf.join("");
 		}
 	};
